@@ -10,7 +10,7 @@ import(
 //Типы данных для основного конфигурационного файла
 type TGeneral struct {
 	Graphite TGraphite `yaml:"graphite"`
-	Api TApiTuningManager `yaml:"tm_api"`
+	Api TApiAnalyzer `yaml:"analyzer_api"`
 	Loggers []TLogging `yaml:"logging"`
 	Storages []TStorage `yaml:"storages"`
 }
@@ -20,7 +20,7 @@ type TGraphite struct {
 	Port string `yaml:"port"`
 }
 
-type TApiTuningManager struct {
+type TApiAnalyzer struct {
 	Host string `yaml:"host"`
 	Port string `yaml:"port"`
 	Protocol string `yaml:"proto"`

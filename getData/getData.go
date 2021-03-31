@@ -2,10 +2,10 @@ package getData
 
 import(
 	"github.com/sirupsen/logrus"
-	"github.com/katrinvarf/hitachi_graphite/config"
-	"github.com/katrinvarf/hitachi_graphite/sendData"
-	//"../config"
-	//"../sendData"
+	//"github.com/katrinvarf/hitachi_graphite/config"
+	//"github.com/katrinvarf/hitachi_graphite/sendData"
+	"../config"
+	"../sendData"
 	"net/http"
 	"encoding/csv"
 	"encoding/json"
@@ -36,11 +36,11 @@ type TStorageApi struct {
 }
 
 
-func GetAgents(log *logrus.Logger, api config.TApiTuningManager)(map[string]TStorageApi, error){
-	url := api.Protocol + "://" + api.Host + ":" + api.Port + "/TuningManager/v1/objects/AgentForRAID"
+func GetAgents(log *logrus.Logger, api config.TApiAnalyzer)(map[string]TStorageApi, error){
+	url := api.Protocol + "://" + api.Host + ":" + api.Port + "/Analytics/RAIDAgent/v1/objects/Agents?agentType=ALL"
 	data_byte, err := getDataFromApi(log, url, api.User, api.Password)
 	if err!=nil{
-		log.Debug("Failed to get data AgentForRAID from api: Error: ", err)
+		log.Debug("Failed to get data RAIDAgent from api: Error: ", err)
 		return nil, err
 	}
 
@@ -59,7 +59,7 @@ func GetAgents(log *logrus.Logger, api config.TApiTuningManager)(map[string]TSto
 	return res_data, nil
 }
 
-func worker(log *logrus.Logger, api config.TApiTuningManager, storagesApi map[string]TStorageApi, storages []config.TStorage, resources []config.TResource, indexes <-chan [2]int, result chan<- bool, last_run *[][]int64){
+func worker(log *logrus.Logger, api config.TApiAnalyzer, storagesApi map[string]TStorageApi, storages []config.TStorage, resources []config.TResource, indexes <-chan [2]int, result chan<- bool, last_run *[][]int64){
 	for item:=range(indexes){
 		value, err := getData(log, api, storagesApi[storages[item[0]].Serial_Num], storages[item[0]], resources[item[1]])
 		if err == nil{
@@ -69,7 +69,7 @@ func worker(log *logrus.Logger, api config.TApiTuningManager, storagesApi map[st
 	}
 }
 
-func GetAllData (log *logrus.Logger, api config.TApiTuningManager, storagesApi map[string]TStorageApi, storages []config.TStorage, resources []config.TResource, last_run *[][]int64){
+func GetAllData (log *logrus.Logger, api config.TApiAnalyzer, storagesApi map[string]TStorageApi, storages []config.TStorage, resources []config.TResource, last_run *[][]int64){
 	size_queue := len(storages)*len(resources)
 	indexes := make(chan [2]int, size_queue)
 	result := make(chan bool, size_queue)
@@ -93,7 +93,7 @@ func GetAllData (log *logrus.Logger, api config.TApiTuningManager, storagesApi m
 	}
 }
 
-func getData(log *logrus.Logger, api config.TApiTuningManager, storageApi TStorageApi, storage config.TStorage, resource config.TResource) (int64, error){
+func getData(log *logrus.Logger, api config.TApiAnalyzer, storageApi TStorageApi, storage config.TStorage, resource config.TResource) (int64, error){
 	var result []string
 	var last int64
 	data, err := getResource(log, api, storageApi, resource.Name)
@@ -101,6 +101,12 @@ func getData(log *logrus.Logger, api config.TApiTuningManager, storageApi TStora
 		log.Warning("Failed to get data ", resource.Name, " from api (", storage.Name, "); Error: ", err)
 		return 0, err
 	}
+
+	if len(data)<=2{
+                err = errors.New("No data in the table " + resource.Name + " from " + storageApi.InstanceName)
+                log.Debug(err)
+                return 0, err
+        }
 
 	headers := make(map[string]TInfoColumn)
 	count := len(data[0])
@@ -290,8 +296,8 @@ func getDataFromApi(log *logrus.Logger, url string, user string, password string
 	return nil, readErrorByContent(body, resp.Header.Get("Content-Type"), resp.StatusCode)
 }
 
-func getResource(log *logrus.Logger, api config.TApiTuningManager, storageApi TStorageApi, resource string)([][]string, error){
-	url := api.Protocol + "://" + api.Host + ":" + api.Port + "/TuningManager/v1/objects/" + resource + "?hostName=" + storageApi.HostName + "%26agentInstanceName=" + storageApi.InstanceName
+func getResource(log *logrus.Logger, api config.TApiAnalyzer, storageApi TStorageApi, resource string)([][]string, error){
+	url := api.Protocol + "://" + api.Host + ":" + api.Port + "/Analytics/RAIDAgent/v1/objects/" + resource + "?hostName=" + storageApi.HostName + "%26agentInstanceName=" + storageApi.InstanceName
 	data_byte, err := getDataFromApi(log, url, api.User, api.Password)
 	if err!=nil{
 		log.Debug("Failed to get data from api: Error: ", err)
@@ -305,11 +311,11 @@ func getResource(log *logrus.Logger, api config.TApiTuningManager, storageApi TS
 		return nil, err
 	}
 
-	if len(res_data)<=2{
+	/*if len(res_data)<=2{
 		err = errors.New("No data in the table " + resource + " from " + storageApi.InstanceName)
 		log.Debug(err)
-		return nil, err
-	}
+		return nil, nil
+	}*/
 	return res_data, nil
 }
 
@@ -328,7 +334,7 @@ func readErrorByContent(data_byte []byte, content string, code int)(err error){
 	return err
 }
 
-func getLdevs (log *logrus.Logger, api config.TApiTuningManager, storageApi TStorageApi)(map[string]map[string]string, error){
+func getLdevs (log *logrus.Logger, api config.TApiAnalyzer, storageApi TStorageApi)(map[string]map[string]string, error){
 	ldevs := make(map[string]map[string]string)
 	data, err := getResource(log, api, storageApi, "RAID_PD_LDC")
 	if err!=nil{
@@ -368,7 +374,7 @@ func getLdevs (log *logrus.Logger, api config.TApiTuningManager, storageApi TSto
 	return ldevs, nil
 }
 
-func getPools (log *logrus.Logger, api config.TApiTuningManager, storageApi TStorageApi)(map[string]map[string]string, error){
+func getPools (log *logrus.Logger, api config.TApiAnalyzer, storageApi TStorageApi)(map[string]map[string]string, error){
 	pools := make(map[string]map[string]string)
 	data, err := getResource(log, api, storageApi, "RAID_PD_PLC")
 	if err!=nil{
