@@ -2,10 +2,10 @@ package getData
 
 import(
 	"github.com/sirupsen/logrus"
-	//"github.com/katrinvarf/hitachi_graphite/config"
-	//"github.com/katrinvarf/hitachi_graphite/sendData"
-	"../config"
-	"../sendData"
+	"gitlab01.sys.local/monitoring-hitachi-storage/hitachi_ops_center_graphite/config"
+	"gitlab01.sys.local/monitoring-hitachi-storage/hitachi_ops_center_graphite/sendData"
+	//"../config"
+	//"../sendData"
 	"net/http"
 	"encoding/csv"
 	"encoding/json"
@@ -19,11 +19,11 @@ import(
 	"bytes"
 )
 
-var (
+/*var (
 	num_attempts = 2
 	period_attempts = 60
 	interval_fix = int64(180)
-)
+)*/
 
 type TInfoColumn struct {
 	index int
@@ -69,11 +69,11 @@ func worker(log *logrus.Logger, api config.TApiAnalyzer, storagesApi map[string]
 	}
 }
 
-func GetAllData (log *logrus.Logger, api config.TApiAnalyzer, storagesApi map[string]TStorageApi, storages []config.TStorage, resources []config.TResource, last_run *[][]int64){
+func GetAllData (log *logrus.Logger, api config.TApiAnalyzer, storagesApi map[string]TStorageApi, workersCount int, storages []config.TStorage, resources []config.TResource, last_run *[][]int64){
 	size_queue := len(storages)*len(resources)
 	indexes := make(chan [2]int, size_queue)
 	result := make(chan bool, size_queue)
-	for w := 1; w <= 8; w++ {
+	for w := 1; w <= workersCount; w++ {
 		go worker(log, api, storagesApi, storages, resources, indexes, result, last_run)
 	}
 	count_queue := 0
@@ -249,26 +249,6 @@ func getData(log *logrus.Logger, api config.TApiAnalyzer, storageApi TStorageApi
 	}
 	return last, nil
 }
-
-/*func getDataBypassError(log *logrus.Logger, url string, user string, password string)(data_byte []byte, err error){
-	var code int
-	for i:=0; i<num_attempts; i++{
-		data_byte, code, err = getDataFromApi(log, url, user, password)
-		if err!=nil{
-			if (code == 503)||(code == 500){
-				time.Sleep(time.Second * time.Duration(period_attempts))
-				continue
-			} else {
-				log.Warning("Failed to get data from api (", url, "); Error: ", err)
-				return data_byte, err
-			}
-		} else {
-			return data_byte, nil
-		}
-	}
-	log.Warning("The number of connection attempts (", num_attempts, ") has expired (", url, "): Error: ", err)
-	return nil, err
-}*/
 
 func getDataFromApi(log *logrus.Logger, url string, user string, password string)([]byte, error){
 	req, err := http.NewRequest("GET", url, nil)

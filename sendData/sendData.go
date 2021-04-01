@@ -3,8 +3,8 @@ package sendData
 import(
 	"github.com/sirupsen/logrus"
 	"gopkg.in/fgrosse/graphigo.v2"
-	//"github.com/katrinvarf/hitachi_graphite/config"
-	"../config"
+	"gitlab01.sys.local/monitoring-hitachi-storage/hitachi_ops_center_graphite/config"
+	//"../config"
 	"strings"
 	"strconv"
 	"time"

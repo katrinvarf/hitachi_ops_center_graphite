@@ -9,10 +9,15 @@ import(
 
 //Типы данных для основного конфигурационного файла
 type TGeneral struct {
+	Workers TWorkers `yaml:"workers"`
 	Graphite TGraphite `yaml:"graphite"`
 	Api TApiAnalyzer `yaml:"analyzer_api"`
 	Loggers []TLogging `yaml:"logging"`
 	Storages []TStorage `yaml:"storages"`
+}
+
+type TWorkers struct {
+	Count int `yaml:"count"`
 }
 
 type TGraphite struct {
@@ -69,6 +74,7 @@ func GetConfig(configPath string) (err error){
 		fmt.Println("Failed to decode document", err)
 		return
 	}
+	fmt.Println("General config read successfully")
 	return nil
 }
 
@@ -85,5 +91,6 @@ func GetResourceConfig(log *logrus.Logger, path string)(err error){
 		log.Warning("Failed to decode document: Error: ", err)
 		return
 	}
+	fmt.Println("Resource configuration read successfully")
 	return nil
 }
