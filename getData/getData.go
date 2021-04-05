@@ -2,8 +2,8 @@ package getData
 
 import(
 	"github.com/sirupsen/logrus"
-	"gitlab01.sys.local/monitoring-hitachi-storage/hitachi_ops_center_graphite/config"
-	"gitlab01.sys.local/monitoring-hitachi-storage/hitachi_ops_center_graphite/sendData"
+	"github.com/katrinvarf/hitachi_ops_center_graphite/config"
+	"github.com/katrinvarf/hitachi_ops_center_graphite/sendData"
 	//"../config"
 	//"../sendData"
 	"net/http"

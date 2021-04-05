@@ -3,8 +3,8 @@ package main
 import(
 	"flag"
 	"github.com/sirupsen/logrus"
-	"gitlab01.sys.local/monitoring-hitachi-storage/hitachi_ops_center_graphite/config"
-	"gitlab01.sys.local/monitoring-hitachi-storage/hitachi_ops_center_graphite/getData"
+	"github.com/katrinvarf/hitachi_ops_center_graphite/config"
+	"github.com/katrinvarf/hitachi_ops_center_graphite/getData"
 	//"./config"
 	//"./getData"
 	"os"
