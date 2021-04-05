@@ -1,7 +1,7 @@
 FROM golang:alpine as builder
 
 RUN apk --no-cache add git
-RUN go get -u gitlab01.sys.local/monitoring-hitachi-storage/hitachi_ops_center_graphite
+RUN go get -u github.com/katrinvarf/hitachi_ops_center_graphite
 
 FROM alpine:latest
 
